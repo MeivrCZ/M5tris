@@ -6,7 +6,7 @@ gameMode mode = Resized;
 
 //declar global
 enum tetrominType {Brick, L, ReverseL, S, ReverseS, I};
-const int tetronimSize = 4;
+const int tetronimSize = 3;
 
 class block
 {
@@ -78,7 +78,7 @@ const int filledColor = WHITE;
 const int placedColor = GREEN;
 const int tetrominColor = BLUE;
 
-const int startSpeed = 200;
+const int startSpeed = 2000;
 int score = 0;
 int speed = 0; //move down every 200 miliseconds, value will be lower over time
 bool isGameOver = false;
@@ -87,8 +87,8 @@ const int pointsForFilledLine = 10;
 tetrominPre* tetromin = NULL;
 
 //declar resized
-const int resizedGridWidht = 9;
-const int resizedGridHight = 15;
+const int resizedGridWidht = 8;
+const int resizedGridHight = 14;
 const int resizedBlockSize = 15;
 const int resizedTetronimStartLine = 0;
 const int resizedTetronimStartCol = 2;
@@ -176,6 +176,8 @@ void Start(){
     delete(tetromin);
   }
   int randomTetrominType = random(0, 5); //0 - Brick, 1 - L, 2 - ReverseL, 3 - S, 4 - ReverseS, 5 - I
+  Serial.println("Start - Tetromin - block num:");
+  Serial.println(randomTetrominType);
   switch (randomTetrominType)
   {
   case 0:
@@ -242,6 +244,7 @@ void Start(){
     Serial.println("Start - resized - done");
     break;
   }
+  delay(200);
 }
 
 void DisplayPlaced(){ //displays allready placed blocks
@@ -339,46 +342,56 @@ void PlaceTetromin(){
     }
 
     if(canPlace){
+      Serial.println("PlaceTertomin - can be placable");
       for (int line = 0; line <= tetronimSize - 1; line++) //place tetromin
       {
         for (int col = 0; col <= tetronimSize; col++)
         {
           if (tetromin->tetrominArea[line][col] != NULL){
             mapArrayResized[tetromin->axisX + col][tetromin->axisY + line] = new block(placedColor);
+            Serial.println("PlaceTertomin - block placed");
+            Serial.println(line);
+            Serial.println(col);
           }
         }
       }
+      Serial.println("PlaceTertomin - placing done");
+
+      if (tetromin != NULL){ //make new tetromin
+        delete(tetromin); 
+        tetromin = NULL;
+      }
+      Serial.println("PlaceTertomin - delete done");
+      int randomTetrominType = random(0, 5); //0 - Brick, 1 - L, 2 - ReverseL, 3 - S, 4 - ReverseS, 5 - I
+      
+      switch (randomTetrominType)
+      {
+      case 0:
+        tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine - 1);
+        break;
+
+      case 1:
+        tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine - 1);
+        break;
+
+      case 2:
+        tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine - 1);
+        break;
+
+      case 3:
+        tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine);
+        break;
+
+      case 4:
+        tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine);
+        break;
+
+      case 5:
+        tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine);
+        break;
+      }
+      Serial.println("PlaceTertomin - new block made");
     }
-
-    delete(tetromin); //make new tetromin
-    int randomTetrominType = random(0, 5); //0 - Brick, 1 - L, 2 - ReverseL, 3 - S, 4 - ReverseS, 5 - I
-    switch (randomTetrominType)
-    {
-    case 0:
-      tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine - 1);
-      break;
-
-    case 1:
-      tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine - 1);
-      break;
-
-    case 2:
-      tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine - 1);
-      break;
-
-    case 3:
-      tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine);
-      break;
-
-    case 4:
-      tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine);
-      break;
-
-    case 5:
-      tetromin = new tetrominPre(tetrominColor, Brick, resizedTetronimStartCol, resizedTetronimStartLine);
-      break;
-    }
-
     break;
   }
 }
@@ -482,8 +495,15 @@ void MoveDown(){
     for (int line = 0; line <= tetronimSize - 1; line++)
     {
       for(int col = 0; col <= tetronimSize - 1; col++){
-        if(tetromin->axisY + line + 1 < resizedGridHight || tetromin->tetrominArea[col][line] != NULL && mapArrayResized[col][line+1] != NULL){
+        
+        Serial.println("MoveDown - another block");
+        Serial.println(mapArrayResized[col][line+1] != NULL); //je li blok pod ním volný
+        Serial.println(tetromin->axisY + line + 1 < resizedGridHight); //je li pod ním místo
+        Serial.println(tetromin->tetrominArea[col][line] != NULL ); //je li blok v gridu tetrominu
+
+        if((tetromin->axisY + line + 1 < resizedGridHight || tetromin->tetrominArea[col][line] != NULL) && mapArrayResized[col][line+1] != NULL){
           canMove = false;
+          Serial.println("MoveDown - Cannot move down");
         }
       }
     }
@@ -491,8 +511,11 @@ void MoveDown(){
   }
   
   if(canMove){
-    tetromin->axisY++;
+    tetromin->axisY = tetromin->axisY + 1;
+    Serial.println("MoveDown - moved down");
+    Serial.println(tetromin->axisY);
   }
+  delay(200);
 }
 
 void DisplayTetromin(){
@@ -500,7 +523,12 @@ void DisplayTetromin(){
   {
     for(int col = 0; col <= tetronimSize - 1; col++){
       if(tetromin->tetrominArea[col][line] != NULL){
-        M5.Lcd.fillRect(tetromin->axisX + col, tetromin->axisY + line , resizedBlockSize, resizedBlockSize, tetrominColor);
+
+        Serial.println("DisplayTetromin - positions:");
+        Serial.println((tetromin->axisX + col) * resizedBlockSize);
+        Serial.println((tetromin->axisY + line) * resizedBlockSize);
+
+        M5.Lcd.fillRect((tetromin->axisX + col)* resizedBlockSize, (tetromin->axisY + line)* resizedBlockSize , resizedBlockSize, resizedBlockSize, tetrominColor);
       }
     }
   }
@@ -541,26 +569,30 @@ void loop() {
     {
       M5.BtnA.read();
       M5.BtnB.read();
-      while (M5.BtnA.read() == 1 && M5.BtnA.pressedFor(100) == 1 || M5.BtnB.read() == 1 && M5.BtnB.pressedFor(100) != 1){}
+      while (M5.BtnA.read() == 1 && M5.BtnA.pressedFor(500) == 1 || M5.BtnB.read() == 1 && M5.BtnB.pressedFor(500) != 1){}
 
-      if(M5.BtnA.pressedFor(100)){
+      if(M5.BtnA.pressedFor(500)){
+        Serial.println("loop - turn tetromin left");
         ClearTetromin();
         TurnLeft();
         DisplayTetromin();
       }
       else if (M5.BtnA.read() == 1)
       {
+        Serial.println("loop - move tetromin left");
         ClearTetromin();
         MoveLeft();
         DisplayTetromin();
       }
       
-      if(M5.BtnB.pressedFor(100)){
+      if(M5.BtnB.pressedFor(500)){
+        Serial.println("loop - turn tetromin right");
         ClearTetromin();
         TurnRight();
         DisplayTetromin();
       }
       else if(M5.BtnB.read() == 1){
+        Serial.println("loop - move tetromin right");
         ClearTetromin();
         MoveRight();
         DisplayTetromin();
