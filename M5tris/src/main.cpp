@@ -14,7 +14,6 @@ const int placedColor = GREEN;
 
 const int startSpeed = 750;
 int score = 0;
-int speed = 0; //move down every 200 miliseconds, value will be lower over time
 bool isGameOver = false;
 const int pointsForFilledLine = 10;
 
@@ -100,20 +99,28 @@ void TetrominDelete(){ //deletes tetrominPice
     delete tetrominPice;
 }
 tetromin* tetrominCopy; //used for manipulation of tetrominPice like turning
-void TetrominCopyMake(){ //makes copy of tetrominPice and puts it in tetrominCopy
-    tetrominCopy = new tetromin(); //creates instance of tetrominCopy
-
-    tetrominCopy->axisX = tetrominPice->axisX; //copy position
+void TetrominCopyMakeLeftRotated(){
+    tetrominCopy = new tetromin();
+    //copy position
+    tetrominCopy->axisX = tetrominPice->axisX;
     tetrominCopy->axisY = tetrominPice->axisY;
-
-    for(int line = 0; line <= tetrominGridSize - 1; line++){ //if position on tetrominArea in tetrominPice contains Block, copy it to tetrominArea in tetrominCopy
-        for(int col = 0; col <= tetrominGridSize - 1; col++){
-            if(tetrominPice->tetrominArea[line][col] != NULL){
-                tetrominCopy->tetrominArea[line][col] = new block(tetrominPice->tetrominArea[line][col]->color);
-            }
-        }
-    }
-} 
+    //make rotated grid copy
+    tetrominCopy->tetrominArea[0][0] = tetrominPice->tetrominArea[0][3]; tetrominCopy->tetrominArea[0][1] = tetrominPice->tetrominArea[1][3]; tetrominCopy->tetrominArea[0][2] = tetrominPice->tetrominArea[2][3]; tetrominCopy->tetrominArea[0][3] = tetrominPice->tetrominArea[3][3];
+    tetrominCopy->tetrominArea[1][0] = tetrominPice->tetrominArea[0][2]; tetrominCopy->tetrominArea[1][1] = tetrominPice->tetrominArea[1][2]; tetrominCopy->tetrominArea[1][2] = tetrominPice->tetrominArea[2][2]; tetrominCopy->tetrominArea[1][3] = tetrominPice->tetrominArea[3][2];
+    tetrominCopy->tetrominArea[2][0] = tetrominPice->tetrominArea[0][1]; tetrominCopy->tetrominArea[2][1] = tetrominPice->tetrominArea[1][1]; tetrominCopy->tetrominArea[2][2] = tetrominPice->tetrominArea[2][1]; tetrominCopy->tetrominArea[2][3] = tetrominPice->tetrominArea[3][1];
+    tetrominCopy->tetrominArea[3][0] = tetrominPice->tetrominArea[0][0]; tetrominCopy->tetrominArea[3][1] = tetrominPice->tetrominArea[1][0]; tetrominCopy->tetrominArea[3][2] = tetrominPice->tetrominArea[2][0]; tetrominCopy->tetrominArea[3][3] = tetrominPice->tetrominArea[3][0];
+}
+void tetrominCopyMakeRightRotated(){
+        tetrominCopy = new tetromin();
+    //copy position
+    tetrominCopy->axisX = tetrominPice->axisX;
+    tetrominCopy->axisY = tetrominPice->axisY;
+    //make rotated grid copy
+    tetrominCopy->tetrominArea[0][0] = tetrominPice->tetrominArea[3][0]; tetrominCopy->tetrominArea[0][1] = tetrominPice->tetrominArea[2][0]; tetrominCopy->tetrominArea[0][2] = tetrominPice->tetrominArea[1][0]; tetrominCopy->tetrominArea[0][3] = tetrominPice->tetrominArea[0][0];
+    tetrominCopy->tetrominArea[1][0] = tetrominPice->tetrominArea[3][1]; tetrominCopy->tetrominArea[1][1] = tetrominPice->tetrominArea[2][1]; tetrominCopy->tetrominArea[1][2] = tetrominPice->tetrominArea[1][1]; tetrominCopy->tetrominArea[1][3] = tetrominPice->tetrominArea[0][1];
+    tetrominCopy->tetrominArea[2][0] = tetrominPice->tetrominArea[3][2]; tetrominCopy->tetrominArea[2][1] = tetrominPice->tetrominArea[2][2]; tetrominCopy->tetrominArea[2][2] = tetrominPice->tetrominArea[1][2]; tetrominCopy->tetrominArea[2][3] = tetrominPice->tetrominArea[0][2];
+    tetrominCopy->tetrominArea[3][0] = tetrominPice->tetrominArea[3][3]; tetrominCopy->tetrominArea[3][1] = tetrominPice->tetrominArea[2][3]; tetrominCopy->tetrominArea[3][2] = tetrominPice->tetrominArea[1][3]; tetrominCopy->tetrominArea[3][3] = tetrominPice->tetrominArea[0][3];
+}
 void TetrominCopyDelete(){ //deletes tetrominCopy
     delete tetrominCopy;
 }
@@ -295,6 +302,18 @@ void DisplayScoreAndNextBlock(){ //displays curent score
         break;
     }
 }
+void DisplayScoreAndNextBlockClear(){
+    switch (selectedGameMode)
+    {
+    case Classic:
+        M5.Lcd.fillRect(0,0,35,240,backgroundCollor);
+        break;
+    
+    case Resized:
+        M5.Lcd.fillRect(0,0,135,15,backgroundCollor);
+        break;
+    }
+}
 void DisplayMap(){ //displays maps
     switch (selectedGameMode)
     {
@@ -315,6 +334,18 @@ void DisplayMap(){ //displays maps
                 }
             }
         }
+        break;
+    }
+}
+void DisplayMapClear(){
+    switch (selectedGameMode)
+    {
+    case Resized:
+        M5.Lcd.fillRect(0,16,135,225,backgroundCollor);
+        break;
+    
+    case Classic:
+        M5.Lcd.fillRect(36,0,100,240,backgroundCollor);
         break;
     }
 }
@@ -462,17 +493,28 @@ void TetrominCreate(){
 /*Function will increse tetrominPice axisY value to simulate fallingm.
   For stoping falling and placing tetromin there will be different function*/
 void TetrominFall(){
+    DisplayTetrominRemove(); //tetromin is redisplayed
     tetrominPice->axisY++;
+    DisplayTetromin();
 }
-//-------- tetromin land --------//
-/*Tetromin block has a ground or a block, this function will place blocks of tetromin on map grid and call createion of new tetromin, also will call check of filled lines.
+//-------- game update --------//
+/*Originally this functions purpose was to just check if something is under the blocks of tetromin, but it was enhanced with function calls like DisplayMap for better optimalization.
+  If tetromin block has a ground or a block under it, this function will place blocks of tetromin on map grid and call createion of new tetromin, also will call check of filled lines.
   If tetromin cannot be placed, tetromin will fall*/
-void TetrominCheckAndLand(){
+void GameUpdateService(){
     bool canPlace = false; //it true, tetromin will be placed, else tetrominFall will be called
+    /*This variable is nesesary for this function.
+      If false, tetromin will fust fall one block and show goes on.
+      If true, function will place tetromin, call creation of new tetromin, displays map, etc.
+      Function is divided to few parts.*/
+
+    //function uses different var. for each mode, way how the code works is same.
     switch (selectedGameMode)
     {
     case Resized:
-        for (int line = 0; line <= tetrominGridSize - 1; line++) //checks if tetromin has ground or block under it
+
+        //here code checks if tetromin has ground or block under it, canPlace is changed to true based on result
+        for (int line = 0; line <= tetrominGridSize - 1; line++)
         {
             for(int col = 0; col <= tetrominGridSize - 1; col++){
                 if (tetrominPice->tetrominArea[line][col] != NULL){
@@ -486,8 +528,12 @@ void TetrominCheckAndLand(){
                 }
             }
         }
-        if(canPlace){ //if can place == true, place blocks, call finction checking if lines are filled and call new tetromin creation function
-            for(int line = 0; line <= tetrominGridSize - 1; line++){ //place tetromin
+
+        //here code works based on state of canPlace boolean
+        if(canPlace){ //Tetromin can be placed. In this part tetromin is placed and several functions are called and executed.
+
+            //place tetromin
+            for(int line = 0; line <= tetrominGridSize - 1; line++){ 
                 for (int col = 0; col <= tetrominGridSize - 1; col++)
                 {
                     if (tetrominPice->tetrominArea[line][col] != NULL){
@@ -495,17 +541,32 @@ void TetrominCheckAndLand(){
                     }
                 }
             }
-            //find filled lines
-            TetrominCreate(); //create new tetromin
-            DisplayScoreAndNextBlock();
+
+            DisplayMap(); //To this point, blocks are just added to map grid, so clearing the display is unnecessary.
+
+            //create new tetromin
+            TetrominCreate(); 
+            
+            //Checks if lines are filled. Description can be found in the function.
+            //CheckFilled();
+
+            //check if game over
+            //CheckGameOver();
+
+            //score and next block bar update
+            DisplayScoreAndNextBlockClear();
+            DisplayScoreAndNextBlock(); //next block is genarated in TetrominCreate, this function is for this reason called after it
+
+            //DisplayTetromin is called every time in main loop begining, so there is no need to use it here
         }
-        else{
+        else{ //tetromin cannot be placed, so tetromin just falls
             TetrominFall();
         }
 
         break;
     case Classic:
-        for (int line = 0; line <= tetrominGridSize - 1; line++) //checks if tetromin has ground or block under it
+        //here code checks if tetromin has ground or block under it, canPlace is changed to true based on result
+        for (int line = 0; line <= tetrominGridSize - 1; line++)
         {
             for(int col = 0; col <= tetrominGridSize - 1; col++){
                 if (tetrominPice->tetrominArea[line][col] != NULL){
@@ -519,8 +580,12 @@ void TetrominCheckAndLand(){
                 }
             }
         }
-        if(canPlace){ //if can place == true, place blocks, call finction checking if lines are filled and call new tetromin creation function
-            for(int line = 0; line <= tetrominGridSize - 1; line++){ //place tetromin
+
+        //here code works based on state of canPlace boolean
+        if(canPlace){ //Tetromin can be placed. In this part tetromin is placed and several functions are called and executed.
+
+            //place tetromin
+            for(int line = 0; line <= tetrominGridSize - 1; line++){
                 for (int col = 0; col <= tetrominGridSize - 1; col++)
                 {
                     if (tetrominPice->tetrominArea[line][col] != NULL){
@@ -528,17 +593,318 @@ void TetrominCheckAndLand(){
                     }
                 }
             }
-            //find filled lines
-            TetrominCreate(); //create new tetromin
-            DisplayScoreAndNextBlock();
+
+            DisplayMap(); //To this point, blocks are just added to map grid, so clearing the display is unnecessary.
+            //find filled lines //Checks if lines are filled. Description can be found in the function.
+
+            //create new tetromin
+            TetrominCreate(); 
+
+            //score and next block bar update
+            DisplayScoreAndNextBlockClear();
+            DisplayScoreAndNextBlock(); //next block is genarated in TetrominCreate, this function is for this reason called after it
+
+            //DisplayTetromin is called every time in main loop begining, so there is no need to use it here
         }
-        else{
+        else{ //tetromin cannot be placed, so tetromin just falls
             TetrominFall();
         }
 
 
         break;
     }
+}
+
+//-------- Movement --------//
+/*Here you can find functions for moving and turning of tetromin.
+  Input events are handled by MovementService().*/
+
+// move left //
+void MoveLeft(){
+    bool canMove = true; //if false -> cannot move | if true -> can move
+    switch (selectedGameMode)
+    {
+    case Resized:
+        //check if tetromn can be moved left
+        for(int line = 0; line <= tetrominGridSize - 1; line++){
+            for (int col = 0; col <= tetrominGridSize - 1; col++){
+                if (tetrominPice->tetrominArea[line][col] != NULL){ //check if tetrominArea[x][x] isn't empty
+                    if (tetrominPice->axisX+col-1 >= 0){ //check if left side from tetromin block isn't void
+                        if (resizedMap[line+tetrominPice->axisY][tetrominPice->axisX+col-1] != NULL) //check if left side from tetromin block is empty
+                        {
+                            canMove = false;
+                            break; //left side isn't empety, tetromin cannot be moved
+                        }
+                    }
+                    else{
+                        canMove = false;
+                        break; //left side is void, tetromin cannot be moved
+                    }
+                }
+            }
+            if (!canMove)
+            {
+                break; //tetromin cannot be moved left, this loop is no longer needed
+            }
+        }
+
+        if(canMove){ //if tetromin can be moved left, move tetromin left
+            DisplayTetrominRemove(); //tetromnin is redisplayed
+            tetrominPice->axisX--;
+            DisplayTetromin();
+        }
+
+        break;
+    case Classic:
+        //check if tetromn can be moved left
+        for(int line = 0; line <= tetrominGridSize - 1; line++){
+            for (int col = 0; col <= tetrominGridSize - 1; col++){
+                if (tetrominPice->tetrominArea[line][col] != NULL){ //check if tetrominArea[x][x] isn't empty
+                    if (tetrominPice->axisX+col-1 >= 0){ //check if left side from tetromin block isn't void
+                        if (classicMap[line+tetrominPice->axisY][tetrominPice->axisX+col-1] != NULL) //check if left side from tetromin block is empty
+                        {
+                            canMove = false;
+                            break; //left side isn't empety, tetromin cannot be moved
+                        }
+                    }
+                    else{
+                        canMove = false;
+                        break; //left side is void, tetromin cannot be moved
+                    }
+                }
+            }
+            if (!canMove)
+            {
+                break; //tetromin cannot be moved left, this loop is no longer needed
+            }
+        }
+
+        if(canMove){ //if tetromin can be moved left, move tetromin left
+            DisplayTetrominRemove(); //tetromnin is redisplayed
+            tetrominPice->axisX--;
+            DisplayTetromin();
+        }
+        break;
+    }
+}
+
+// move right //
+void MoveRight(){
+    bool canMove = true; //if false -> cannot move | if true -> can move
+    switch (selectedGameMode)
+    {
+    case Resized:
+        //check if tetromn can be moved right
+        for(int line = 0; line <= tetrominGridSize - 1; line++){
+            for (int col = 0; col <= tetrominGridSize - 1; col++){
+                if (tetrominPice->tetrominArea[line][col] != NULL){ //check if tetrominArea[x][x] isn't empty
+                    if (tetrominPice->axisX+col+1 <= resizedGridWidht - 1){ //check if left side from tetromin block isn't void
+                        if (resizedMap[line+tetrominPice->axisY][tetrominPice->axisX+col+1] != NULL) //check if right side from tetromin block is empty
+                        {
+                            canMove = false;
+                            break; //right side isn't empety, tetromin cannot be moved
+                        }
+                    }
+                    else{
+                        canMove = false;
+                        break; //right side is void, tetromin cannot be moved
+                    }
+                }
+            }
+            if (!canMove)
+            {
+
+                
+                break; //tetromin cannot be moved right, this loop is no longer needed
+            }
+        }
+
+        if(canMove){ //if tetromin can be moved right, move tetromin right
+            DisplayTetrominRemove(); //tetromnin is redisplayed
+            tetrominPice->axisX++;
+            DisplayTetromin();
+        }
+        break;
+    case Classic:
+        //check if tetromn can be moved right
+        for(int line = 0; line <= tetrominGridSize - 1; line++){
+            for (int col = 0; col <= tetrominGridSize - 1; col++){
+                if (tetrominPice->tetrominArea[line][col] != NULL){ //check if tetrominArea[x][x] isn't empty
+                    if (tetrominPice->axisX+col+1 <= classicGridWidht - 1){ //check if left side from tetromin block isn't void
+                        if (classicMap[line+tetrominPice->axisY][tetrominPice->axisX+col+1] != NULL) //check if right side from tetromin block is empty
+                        {
+                            canMove = false;
+                            break; //right side isn't empety, tetromin cannot be moved
+                        }
+                    }
+                    else{
+                        canMove = false;
+                        break; //right side is void, tetromin cannot be moved
+                    }
+                }
+            }
+            if (!canMove)
+            {
+
+                
+                break; //tetromin cannot be moved right, this loop is no longer needed
+            }
+        }
+
+        if(canMove){ //if tetromin can be moved right, move tetromin right
+            DisplayTetrominRemove(); //tetromnin is redisplayed
+            tetrominPice->axisX++;
+            DisplayTetromin();
+        }
+        break;
+    }
+}
+
+// rotate left //
+/*rotation is made like this:
+    1. make a rotated copy of tetrominPice (tetrominCopy)
+    2. check if blocks of copy of tetromin aren't placed on placed blocks, or in void
+    3a. if there is not any issue with copy, owerwrite tetrominPice with tetrominCopy
+    3b1. if there is a issue try moving the copy one position on oposite side from rotation
+    3b2. if issue still ocurs, do nothing
+    4. delete copy
+*/
+void RotateLeft(){
+    bool canPlace = true; //true -> can be placed | false -> cannot be placed
+    //make copy
+    TetrominCopyMakeLeftRotated();
+    Serial.println("copy made");
+
+    //check if cannot be placed
+    for (int line = 0; line <= tetrominGridSize - 1; line++)
+    {
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            if(tetrominCopy->axisX+col>=0){ //check if void
+                switch (selectedGameMode)
+                {
+                case Resized:
+                    if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                        break; //tetromin cannot be placed, we don't need this loop anymore
+                    }
+                    break;
+                case Classic:
+                    if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                        break; //tetromin cannot be placed, we don't need this loop anymore
+                    }
+                    break;
+                }
+            }
+            else{
+                canPlace = false;
+                break; //tetromin cannot be placed, we don't need this loop anymore
+            }
+        }
+        if(!canPlace){
+            break; //tetromin cannot be placed, we don't need this loop anymore
+        }
+    }
+
+    if(canPlace){ //tetromin can be placed
+        DisplayTetrominRemove();
+
+        //overwrite tetromin
+        tetrominPice->axisX = tetrominCopy->axisX;
+        tetrominPice->axisY = tetrominCopy->axisY;
+        for (int line = 0; line <= tetrominGridSize - 1; line++){
+            for(int col = 0; col <= tetrominGridSize - 1; col++){
+                tetrominPice->tetrominArea[line][col] = tetrominCopy->tetrominArea[line][col];
+            }
+        }
+
+        DisplayTetromin();
+
+        Serial.println("tetromin rotate 1 succesful");
+
+        //delete copy
+        delete tetrominCopy;
+        Serial.println("delete 1 succesful");
+        return; //rotation is done, we dont need this function anymore
+    }
+    
+    Serial.println("cannot place tetromin, trying again");
+    //try moving tetromin one block right
+    tetrominCopy->axisX++;
+    canPlace = true;
+    //check again if cannot be placed
+    for (int line = 0; line <= tetrominGridSize - 1; line++)
+    {
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            if(tetrominCopy->axisX+col>=0){ //check if void
+                switch (selectedGameMode)
+                {
+                case Resized:
+                    if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                        break; //tetromin cannot be placed, we don't need this loop anymore
+                    }
+                    break;
+                case Classic:
+                    if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                        break; //tetromin cannot be placed, we don't need this loop anymore
+                    }
+                    break;
+                }
+            }
+            else{
+                canPlace = false;
+                break; //tetromin cannot be placed, we don't need this loop anymore
+            }
+        }
+        if(!canPlace){
+            break; //tetromin cannot be placed, we don't need this loop anymore
+        }
+    }
+
+    if(canPlace){ //tetromin can be placed
+        DisplayTetrominRemove();
+
+        //overwrite tetromin
+        tetrominPice->axisX = tetrominCopy->axisX;
+        tetrominPice->axisY = tetrominCopy->axisY;
+        for (int line = 0; line <= tetrominGridSize - 1; line++){
+            for(int col = 0; col <= tetrominGridSize - 1; col++){
+                tetrominPice->tetrominArea[line][col] = tetrominCopy->tetrominArea[line][col];
+            }
+        }
+
+        DisplayTetromin();
+        Serial.println("tetromin rotate 2 succesful");
+        //delete copy
+        delete tetrominCopy;
+        Serial.println("delete 2 succesful");
+        return; //rotation is done, we dont need this function anymore
+    }
+
+    //tetomin cannot be placed, just delete copy
+    delete tetrominCopy;
+    Serial.println("delete 3 succesful");
+}
+
+// rotate right //
+/*rotation is made like this:
+    1. make a rotated copy of tetrominPice (tetrominCopy)
+    2. check if blocks of copy of tetromin aren't placed on placed blocks, or in void
+    3a. if there is not any issue with copy, owerwrite tetrominPice with tetrominCopy
+    3b1. if there is a issue try moving the copy one position on oposite side from rotation
+    3b2. if issue still ocurs, do nothing
+    4. delete copy
+*/
+void RotateRight(){
+    //make copy
+    tetrominCopyMakeRightRotated();
+}
+
+// service //
+void MovementService(){
+    
 }
 
 
@@ -563,29 +929,22 @@ void setup() {
 
 ////////// loop //////////
 void loop(){
-  selectedGameMode = Resized;
-  TetrominCreate();
-  DisplayScoreAndNextBlock();
-  for (int i = 0; i <= 50; i++)
-  {
-      DisplayMap();
-      DisplayTetromin();
-      delay(100);
-      DisplayTetrominRemove();
-      TetrominCheckAndLand();
-  }
-  M5.Lcd.fillScreen(backgroundCollor);
-  
+    DisplayScoreAndNextBlock();
+    while (!isGameOver)
+    {
+        DisplayTetromin();
 
-  selectedGameMode = Classic;
-  DisplayScoreAndNextBlock();
-  for (int i = 0; i <= 100; i++)
-  {
-      DisplayMap();
-      DisplayTetromin();
-      delay(100);
-      DisplayTetrominRemove();
-      TetrominCheckAndLand();
-  }
-  M5.Lcd.fillScreen(backgroundCollor);
+        //movement and turning
+        MovementService();
+
+        GameUpdateService(); //this function provides falling, clearing lines, placing of tetromin, display map, game over checking
+        /*GameUpdateService provides almost every feature of this game for these reasons:
+        - optimalization - some functions like DisplayMap, CheckGameOver or CheckFilledLines won't be called for no reason, it will only slow down the game
+        
+        Function is described with comments, so if you want to find about how this game works, look there*/
+        //-------- Debug --------//
+        delay(800);
+        RotateLeft();
+    }
+    //game over and restart stuff
 }
