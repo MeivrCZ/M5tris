@@ -29,7 +29,7 @@ const int tetrominColor = BLUE;
 enum tetrominType {Brick, L, ReverseL, S, ReverseS, I, T};
 tetrominType tetrominNext; //contains value of next tetromin
 void TetrominDeclareNext(){ //declares next tetromin
-    int tetId = random(1, 7); //1 = Brick, 2 = L, 3 = ReverseL, 4 = S, 5 = ReverseS, 6 = I
+    int tetId = random(1, 7); //1 = Brick, 2 = L, 3 = ReverseL, 4 = S, 5 = ReverseS, 6 = I, 7 = T
     switch (tetId)
     {
     case 1:
@@ -98,6 +98,13 @@ tetromin* tetrominPice; //pice o tetromin
 void TetrominDelete(){ //deletes tetrominPice
     delete tetrominPice;
 }
+void TetrominClearGrid(){
+    for (int line = 0; line <= tetrominGridSize - 1; line++){
+        for (int col = 0; col <= tetrominGridSize - 1; col++){
+            tetrominPice -> tetrominArea[line][col] = NULL;
+        }
+    }
+}
 tetromin* tetrominCopy; //used for manipulation of tetrominPice like turning
 void TetrominCopyMakeLeftRotated(){
     tetrominCopy = new tetromin();
@@ -105,21 +112,21 @@ void TetrominCopyMakeLeftRotated(){
     tetrominCopy->axisX = tetrominPice->axisX;
     tetrominCopy->axisY = tetrominPice->axisY;
     //make rotated grid copy
-    tetrominCopy->tetrominArea[0][0] = tetrominPice->tetrominArea[0][3]; tetrominCopy->tetrominArea[0][1] = tetrominPice->tetrominArea[1][3]; tetrominCopy->tetrominArea[0][2] = tetrominPice->tetrominArea[2][3]; tetrominCopy->tetrominArea[0][3] = tetrominPice->tetrominArea[3][3];
-    tetrominCopy->tetrominArea[1][0] = tetrominPice->tetrominArea[0][2]; tetrominCopy->tetrominArea[1][1] = tetrominPice->tetrominArea[1][2]; tetrominCopy->tetrominArea[1][2] = tetrominPice->tetrominArea[2][2]; tetrominCopy->tetrominArea[1][3] = tetrominPice->tetrominArea[3][2];
-    tetrominCopy->tetrominArea[2][0] = tetrominPice->tetrominArea[0][1]; tetrominCopy->tetrominArea[2][1] = tetrominPice->tetrominArea[1][1]; tetrominCopy->tetrominArea[2][2] = tetrominPice->tetrominArea[2][1]; tetrominCopy->tetrominArea[2][3] = tetrominPice->tetrominArea[3][1];
-    tetrominCopy->tetrominArea[3][0] = tetrominPice->tetrominArea[0][0]; tetrominCopy->tetrominArea[3][1] = tetrominPice->tetrominArea[1][0]; tetrominCopy->tetrominArea[3][2] = tetrominPice->tetrominArea[2][0]; tetrominCopy->tetrominArea[3][3] = tetrominPice->tetrominArea[3][0];
+    if(tetrominPice->tetrominArea[0][3] != NULL) tetrominCopy->tetrominArea[0][0] = new block(tetrominPice->tetrominArea[0][3]->color); if(tetrominPice->tetrominArea[1][3] != NULL) tetrominCopy->tetrominArea[0][1] = new block(tetrominPice->tetrominArea[1][3]->color); if(tetrominPice->tetrominArea[2][3] != NULL) tetrominCopy->tetrominArea[0][2] = new block(tetrominPice->tetrominArea[2][3]->color); if(tetrominPice->tetrominArea[3][3] != NULL) tetrominCopy->tetrominArea[0][3] = new block(tetrominPice->tetrominArea[3][3]->color);
+    if(tetrominPice->tetrominArea[0][2] != NULL) tetrominCopy->tetrominArea[1][0] = new block(tetrominPice->tetrominArea[0][2]->color); if(tetrominPice->tetrominArea[1][2] != NULL) tetrominCopy->tetrominArea[1][1] = new block(tetrominPice->tetrominArea[1][2]->color); if(tetrominPice->tetrominArea[2][2] != NULL) tetrominCopy->tetrominArea[1][2] = new block(tetrominPice->tetrominArea[2][2]->color); if(tetrominPice->tetrominArea[3][2] != NULL) tetrominCopy->tetrominArea[1][3] = new block(tetrominPice->tetrominArea[3][2]->color);
+    if(tetrominPice->tetrominArea[0][1] != NULL) tetrominCopy->tetrominArea[2][0] = new block(tetrominPice->tetrominArea[0][1]->color); if(tetrominPice->tetrominArea[1][1] != NULL) tetrominCopy->tetrominArea[2][1] = new block(tetrominPice->tetrominArea[1][1]->color); if(tetrominPice->tetrominArea[2][1] != NULL) tetrominCopy->tetrominArea[2][2] = new block(tetrominPice->tetrominArea[2][1]->color); if(tetrominPice->tetrominArea[3][1] != NULL) tetrominCopy->tetrominArea[2][3] = new block(tetrominPice->tetrominArea[3][1]->color);
+    if(tetrominPice->tetrominArea[0][0] != NULL) tetrominCopy->tetrominArea[3][0] = new block(tetrominPice->tetrominArea[0][0]->color); if(tetrominPice->tetrominArea[1][0] != NULL) tetrominCopy->tetrominArea[3][1] = new block(tetrominPice->tetrominArea[1][0]->color); if(tetrominPice->tetrominArea[2][0] != NULL) tetrominCopy->tetrominArea[3][2] = new block(tetrominPice->tetrominArea[2][0]->color); if(tetrominPice->tetrominArea[3][0] != NULL) tetrominCopy->tetrominArea[3][3] = new block(tetrominPice->tetrominArea[3][0]->color);
 }
 void tetrominCopyMakeRightRotated(){
-        tetrominCopy = new tetromin();
+    tetrominCopy = new tetromin();
     //copy position
     tetrominCopy->axisX = tetrominPice->axisX;
     tetrominCopy->axisY = tetrominPice->axisY;
     //make rotated grid copy
-    tetrominCopy->tetrominArea[0][0] = tetrominPice->tetrominArea[3][0]; tetrominCopy->tetrominArea[0][1] = tetrominPice->tetrominArea[2][0]; tetrominCopy->tetrominArea[0][2] = tetrominPice->tetrominArea[1][0]; tetrominCopy->tetrominArea[0][3] = tetrominPice->tetrominArea[0][0];
-    tetrominCopy->tetrominArea[1][0] = tetrominPice->tetrominArea[3][1]; tetrominCopy->tetrominArea[1][1] = tetrominPice->tetrominArea[2][1]; tetrominCopy->tetrominArea[1][2] = tetrominPice->tetrominArea[1][1]; tetrominCopy->tetrominArea[1][3] = tetrominPice->tetrominArea[0][1];
-    tetrominCopy->tetrominArea[2][0] = tetrominPice->tetrominArea[3][2]; tetrominCopy->tetrominArea[2][1] = tetrominPice->tetrominArea[2][2]; tetrominCopy->tetrominArea[2][2] = tetrominPice->tetrominArea[1][2]; tetrominCopy->tetrominArea[2][3] = tetrominPice->tetrominArea[0][2];
-    tetrominCopy->tetrominArea[3][0] = tetrominPice->tetrominArea[3][3]; tetrominCopy->tetrominArea[3][1] = tetrominPice->tetrominArea[2][3]; tetrominCopy->tetrominArea[3][2] = tetrominPice->tetrominArea[1][3]; tetrominCopy->tetrominArea[3][3] = tetrominPice->tetrominArea[0][3];
+    if(tetrominPice->tetrominArea[3][0] != NULL) tetrominCopy->tetrominArea[0][0] = new block(tetrominPice->tetrominArea[3][0]->color); if(tetrominPice->tetrominArea[2][0] != NULL) tetrominCopy->tetrominArea[0][1] = new block(tetrominPice->tetrominArea[2][0]->color); if(tetrominPice->tetrominArea[1][0] != NULL) tetrominCopy->tetrominArea[0][2] = new block(tetrominPice->tetrominArea[1][0]->color); if(tetrominPice->tetrominArea[0][0] != NULL) tetrominCopy->tetrominArea[0][3] = new block(tetrominPice->tetrominArea[0][0]->color);
+    if(tetrominPice->tetrominArea[3][1] != NULL) tetrominCopy->tetrominArea[1][0] = new block(tetrominPice->tetrominArea[3][1]->color); if(tetrominPice->tetrominArea[2][1] != NULL) tetrominCopy->tetrominArea[1][1] = new block(tetrominPice->tetrominArea[2][1]->color); if(tetrominPice->tetrominArea[1][1] != NULL) tetrominCopy->tetrominArea[1][2] = new block(tetrominPice->tetrominArea[1][1]->color); if(tetrominPice->tetrominArea[0][1] != NULL) tetrominCopy->tetrominArea[1][3] = new block(tetrominPice->tetrominArea[0][1]->color);
+    if(tetrominPice->tetrominArea[3][2] != NULL) tetrominCopy->tetrominArea[2][0] = new block(tetrominPice->tetrominArea[3][2]->color); if(tetrominPice->tetrominArea[2][2] != NULL) tetrominCopy->tetrominArea[2][1] = new block(tetrominPice->tetrominArea[2][2]->color); if(tetrominPice->tetrominArea[1][2] != NULL) tetrominCopy->tetrominArea[2][2] = new block(tetrominPice->tetrominArea[1][2]->color); if(tetrominPice->tetrominArea[0][2] != NULL) tetrominCopy->tetrominArea[2][3] = new block(tetrominPice->tetrominArea[0][2]->color);
+    if(tetrominPice->tetrominArea[3][3] != NULL) tetrominCopy->tetrominArea[3][0] = new block(tetrominPice->tetrominArea[3][3]->color); if(tetrominPice->tetrominArea[2][3] != NULL) tetrominCopy->tetrominArea[3][1] = new block(tetrominPice->tetrominArea[2][3]->color); if(tetrominPice->tetrominArea[1][3] != NULL) tetrominCopy->tetrominArea[3][2] = new block(tetrominPice->tetrominArea[1][3]->color); if(tetrominPice->tetrominArea[0][3] != NULL) tetrominCopy->tetrominArea[3][3] = new block(tetrominPice->tetrominArea[0][3]->color);
 }
 void TetrominCopyDelete(){ //deletes tetrominCopy
     delete tetrominCopy;
@@ -598,7 +605,10 @@ void GameUpdateService(){
             //find filled lines //Checks if lines are filled. Description can be found in the function.
 
             //create new tetromin
-            TetrominCreate(); 
+            TetrominCreate();
+
+            //display new tetromin
+            DisplayTetromin();
 
             //score and next block bar update
             DisplayScoreAndNextBlockClear();
@@ -607,7 +617,9 @@ void GameUpdateService(){
             //DisplayTetromin is called every time in main loop begining, so there is no need to use it here
         }
         else{ //tetromin cannot be placed, so tetromin just falls
+            DisplayTetrominRemove();
             TetrominFall();
+            DisplayTetromin();
         }
 
 
@@ -766,38 +778,46 @@ void MoveRight(){
     2. check if blocks of copy of tetromin aren't placed on placed blocks, or in void
     3a. if there is not any issue with copy, owerwrite tetrominPice with tetrominCopy
     3b1. if there is a issue try moving the copy one position on oposite side from rotation
-    3b2. if issue still ocurs, do nothing
+    3b2. if issue still ocurs, try to move two positions to side of rotation
+    3b3a. if everithing goes right, overwrite tetrominPice with tetrominCopy
+    3b3b. if problem still ocurs, do nothing
     4. delete copy
 */
 void RotateLeft(){
     bool canPlace = true; //true -> can be placed | false -> cannot be placed
     //make copy
     TetrominCopyMakeLeftRotated();
-    Serial.println("copy made");
 
     //check if cannot be placed
     for (int line = 0; line <= tetrominGridSize - 1; line++)
     {
         for(int col = 0; col <= tetrominGridSize - 1; col++){
-            if(tetrominCopy->axisX+col>=0){ //check if void
-                switch (selectedGameMode)
-                {
-                case Resized:
+            switch (selectedGameMode)
+            {
+            case Resized:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
                     if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
                         canPlace = false;
-                        break; //tetromin cannot be placed, we don't need this loop anymore
+                        Serial.println("tetromin is on block");
                     }
-                    break;
-                case Classic:
+                }
+                else{
+                    canPlace = false;
+                    Serial.println("tetromin is in void");
+                }
+                break;
+            case Classic:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=classicGridWidht-1){ //check if void
                     if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
                         canPlace = false;
-                        break; //tetromin cannot be placed, we don't need this loop anymore
                     }
-                    break;
                 }
+                else{
+                    canPlace = false;
+                }
+                break;
             }
-            else{
-                canPlace = false;
+            if(!canPlace){
                 break; //tetromin cannot be placed, we don't need this loop anymore
             }
         }
@@ -810,25 +830,24 @@ void RotateLeft(){
         DisplayTetrominRemove();
 
         //overwrite tetromin
+        TetrominDelete();
+        tetrominPice = new tetromin();
         tetrominPice->axisX = tetrominCopy->axisX;
         tetrominPice->axisY = tetrominCopy->axisY;
         for (int line = 0; line <= tetrominGridSize - 1; line++){
             for(int col = 0; col <= tetrominGridSize - 1; col++){
-                tetrominPice->tetrominArea[line][col] = tetrominCopy->tetrominArea[line][col];
+                if(tetrominCopy->tetrominArea[line][col] != NULL)
+                    tetrominPice->tetrominArea[line][col] = new block(tetrominCopy->tetrominArea[line][col]->color);
             }
         }
 
         DisplayTetromin();
 
-        Serial.println("tetromin rotate 1 succesful");
-
         //delete copy
-        delete tetrominCopy;
-        Serial.println("delete 1 succesful");
+        TetrominCopyDelete();
         return; //rotation is done, we dont need this function anymore
     }
     
-    Serial.println("cannot place tetromin, trying again");
     //try moving tetromin one block right
     tetrominCopy->axisX++;
     canPlace = true;
@@ -836,25 +855,30 @@ void RotateLeft(){
     for (int line = 0; line <= tetrominGridSize - 1; line++)
     {
         for(int col = 0; col <= tetrominGridSize - 1; col++){
-            if(tetrominCopy->axisX+col>=0){ //check if void
-                switch (selectedGameMode)
-                {
-                case Resized:
+            switch (selectedGameMode)
+            {
+            case Resized:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
                     if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
                         canPlace = false;
-                        break; //tetromin cannot be placed, we don't need this loop anymore
                     }
-                    break;
-                case Classic:
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            case Classic:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=classicGridWidht-1){ //check if void
                     if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
                         canPlace = false;
-                        break; //tetromin cannot be placed, we don't need this loop anymore
                     }
-                    break;
                 }
+                else{
+                    canPlace = false;
+                }
+                break;
             }
-            else{
-                canPlace = false;
+            if(!canPlace){
                 break; //tetromin cannot be placed, we don't need this loop anymore
             }
         }
@@ -867,25 +891,85 @@ void RotateLeft(){
         DisplayTetrominRemove();
 
         //overwrite tetromin
+        TetrominDelete();
+        tetrominPice = new tetromin();
         tetrominPice->axisX = tetrominCopy->axisX;
         tetrominPice->axisY = tetrominCopy->axisY;
         for (int line = 0; line <= tetrominGridSize - 1; line++){
             for(int col = 0; col <= tetrominGridSize - 1; col++){
-                tetrominPice->tetrominArea[line][col] = tetrominCopy->tetrominArea[line][col];
+                if(tetrominCopy->tetrominArea[line][col] != NULL)
+                    tetrominPice->tetrominArea[line][col] = new block(tetrominCopy->tetrominArea[line][col]->color);
             }
         }
 
         DisplayTetromin();
-        Serial.println("tetromin rotate 2 succesful");
         //delete copy
-        delete tetrominCopy;
-        Serial.println("delete 2 succesful");
+        TetrominCopyDelete();
+        return; //rotation is done, we dont need this function anymore
+    }
+
+    //try moving tetromin two blocks left
+    tetrominCopy->axisX -= 2;
+    canPlace = true;
+    //check again if cannot be placed
+    for (int line = 0; line <= tetrominGridSize - 1; line++)
+    {
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            switch (selectedGameMode)
+            {
+            case Resized:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
+                    if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            case Classic:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=classicGridWidht-1){ //check if void
+                    if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            }
+            if(!canPlace){
+                break; //tetromin cannot be placed, we don't need this loop anymore
+            }
+        }
+        if(!canPlace){
+            break; //tetromin cannot be placed, we don't need this loop anymore
+        }
+    }
+
+    if(canPlace){ //tetromin can be placed
+        DisplayTetrominRemove();
+
+        //overwrite tetromin
+        TetrominDelete();
+        tetrominPice = new tetromin();
+        tetrominPice->axisX = tetrominCopy->axisX;
+        tetrominPice->axisY = tetrominCopy->axisY;
+        for (int line = 0; line <= tetrominGridSize - 1; line++){
+            for(int col = 0; col <= tetrominGridSize - 1; col++){
+                if(tetrominCopy->tetrominArea[line][col] != NULL)
+                    tetrominPice->tetrominArea[line][col] = new block(tetrominCopy->tetrominArea[line][col]->color);
+            }
+        }
+
+        DisplayTetromin();
+        //delete copy
+        TetrominCopyDelete();
         return; //rotation is done, we dont need this function anymore
     }
 
     //tetomin cannot be placed, just delete copy
-    delete tetrominCopy;
-    Serial.println("delete 3 succesful");
+    TetrominCopyDelete();
 }
 
 // rotate right //
@@ -898,8 +982,192 @@ void RotateLeft(){
     4. delete copy
 */
 void RotateRight(){
+    bool canPlace = true; //true -> can be placed | false -> cannot be placed
     //make copy
     tetrominCopyMakeRightRotated();
+
+    //check if cannot be placed
+    for (int line = 0; line <= tetrominGridSize - 1; line++)
+    {
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            switch (selectedGameMode)
+            {
+            case Resized:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
+                    if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                        Serial.println("tetromin is on block");
+                    }
+                }
+                else{
+                    canPlace = false;
+                    Serial.println("tetromin is in void");
+                }
+                break;
+            case Classic:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=classicGridWidht-1){ //check if void
+                    if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            }
+            if(!canPlace){
+                break; //tetromin cannot be placed, we don't need this loop anymore
+            }
+        }
+        if(!canPlace){
+            break; //tetromin cannot be placed, we don't need this loop anymore
+        }
+    }
+
+    if(canPlace){ //tetromin can be placed
+        DisplayTetrominRemove();
+
+        //overwrite tetromin
+        TetrominDelete();
+        tetrominPice = new tetromin();
+        tetrominPice->axisX = tetrominCopy->axisX;
+        tetrominPice->axisY = tetrominCopy->axisY;
+        for (int line = 0; line <= tetrominGridSize - 1; line++){
+            for(int col = 0; col <= tetrominGridSize - 1; col++){
+                if(tetrominCopy->tetrominArea[line][col] != NULL)
+                    tetrominPice->tetrominArea[line][col] = new block(tetrominCopy->tetrominArea[line][col]->color);
+            }
+        }
+
+        DisplayTetromin();
+
+        //delete copy
+        TetrominCopyDelete();
+        return; //rotation is done, we dont need this function anymore
+    }
+    
+    //try moving tetromin one block left
+    tetrominCopy->axisX--;
+    canPlace = true;
+    //check again if cannot be placed
+    for (int line = 0; line <= tetrominGridSize - 1; line++)
+    {
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            switch (selectedGameMode)
+            {
+            case Resized:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
+                    if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            case Classic:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=classicGridWidht-1){ //check if void
+                    if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            }
+            if(!canPlace){
+                break; //tetromin cannot be placed, we don't need this loop anymore
+            }
+        }
+        if(!canPlace){
+            break; //tetromin cannot be placed, we don't need this loop anymore
+        }
+    }
+
+    if(canPlace){ //tetromin can be placed
+        DisplayTetrominRemove();
+
+        //overwrite tetromin
+        TetrominDelete();
+        tetrominPice = new tetromin();
+        tetrominPice->axisX = tetrominCopy->axisX;
+        tetrominPice->axisY = tetrominCopy->axisY;
+        for (int line = 0; line <= tetrominGridSize - 1; line++){
+            for(int col = 0; col <= tetrominGridSize - 1; col++){
+                if(tetrominCopy->tetrominArea[line][col] != NULL)
+                    tetrominPice->tetrominArea[line][col] = new block(tetrominCopy->tetrominArea[line][col]->color);
+            }
+        }
+
+        DisplayTetromin();
+        //delete copy
+        TetrominCopyDelete();
+        return; //rotation is done, we dont need this function anymore
+    }
+
+    //try moving tetromin two blocks right
+    tetrominCopy->axisX += 2;
+    canPlace = true;
+    //check again if cannot be placed
+    for (int line = 0; line <= tetrominGridSize - 1; line++)
+    {
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            switch (selectedGameMode)
+            {
+            case Resized:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
+                    if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            case Classic:
+                if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=classicGridWidht-1){ //check if void
+                    if(classicMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
+                        canPlace = false;
+                    }
+                }
+                else{
+                    canPlace = false;
+                }
+                break;
+            }
+            if(!canPlace){
+                break; //tetromin cannot be placed, we don't need this loop anymore
+            }
+        }
+        if(!canPlace){
+            break; //tetromin cannot be placed, we don't need this loop anymore
+        }
+    }
+
+    if(canPlace){ //tetromin can be placed
+        DisplayTetrominRemove();
+
+        //overwrite tetromin
+        TetrominDelete();
+        tetrominPice = new tetromin();
+        tetrominPice->axisX = tetrominCopy->axisX;
+        tetrominPice->axisY = tetrominCopy->axisY;
+        for (int line = 0; line <= tetrominGridSize - 1; line++){
+            for(int col = 0; col <= tetrominGridSize - 1; col++){
+                if(tetrominCopy->tetrominArea[line][col] != NULL)
+                    tetrominPice->tetrominArea[line][col] = new block(tetrominCopy->tetrominArea[line][col]->color);
+            }
+        }
+
+        DisplayTetromin();
+        //delete copy
+        TetrominCopyDelete();
+        return; //rotation is done, we dont need this function anymore
+    }
+
+    //tetomin cannot be placed, just delete copy
+    TetrominCopyDelete();
 }
 
 // service //
@@ -926,14 +1194,12 @@ void setup() {
   TetrominCreate(); //creates tetromin
 }
 
-
 ////////// loop //////////
 void loop(){
     DisplayScoreAndNextBlock();
+    DisplayTetromin();
     while (!isGameOver)
     {
-        DisplayTetromin();
-
         //movement and turning
         MovementService();
 
@@ -944,7 +1210,8 @@ void loop(){
         Function is described with comments, so if you want to find about how this game works, look there*/
         //-------- Debug --------//
         delay(800);
-        RotateLeft();
+        MoveRight();
+        RotateRight();
     }
     //game over and restart stuff
 }
