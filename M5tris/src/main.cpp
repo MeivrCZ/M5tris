@@ -12,10 +12,10 @@ const int filledColor = WHITE;
 const int otherColor = WHITE; //for things like score, lines, game over screen, etc.
 const int placedColor = GREEN;
 
-const int startSpeed = 800;
+const int startSpeed = 300;
 int score = 0;
 bool isGameOver = false;
-const int pointsForFilledLine = 10;
+const int pointsForFilledLine = 40;
 bool moved = false; //if player moved tetromin, and is still holding button, do not move
 
 //-------- game mode --------//
@@ -419,6 +419,18 @@ void DisplayFilledLine(int linePos){ //display white line at position
         break;
     }
 }
+void DisplayGameOver(){ //displays game over screen with score
+    M5.Lcd.fillRect(17, 50, 101, 140, backgroundCollor);
+    M5.Lcd.drawRect(17, 50, 101, 140, otherColor);
+    M5.Lcd.setCursor(19, 52);
+    M5.Lcd.println("Game Over");
+    M5.Lcd.setCursor(19, 61);
+    M5.Lcd.println(score);
+    M5.Lcd.setCursor(19, 70);
+    M5.Lcd.println("press BtnA to");
+    M5.Lcd.setCursor(19, 79);
+    M5.Lcd.println("restart");
+}
 
 //-------- create tetromin --------//
 /*here tetromins are created. 
@@ -518,7 +530,7 @@ void TetrominFall(){
 
 //-------- filled lines -------//
 /*This function checks if there are some filled lines on map. If line is filled, clear that area, and move everithing from higher lines down.
-  For cleard line, player will gain 40 score. For multiple cleared lines, player will get 40*(num. of filled lines  *  num. of filled lines) score (this rule wont apply if there is a gap betwene filled lines).*/
+  For cleard line, player will gain 40 score (pointsForFilledLine). For multiple cleared lines, player will get pointsForFilledLine*(linesInRow  *  linesInRow) score (this rule wont apply if there is a gap betwene filled lines).*/
 void FilledLinesCheck(){
     int linesInRow = 0;
     int isFilled = true;
@@ -537,7 +549,7 @@ void FilledLinesCheck(){
 
 
             if (isFilled == false){ //there is a gap betwene lines, add score and reset linesInRow
-                score += 40*(linesInRow * linesInRow);
+                score += pointsForFilledLine*(linesInRow * linesInRow);
                 linesInRow = 0;
             }
             else{ //clear line, move higher blocks down, and add 1 to linesInRow
@@ -583,7 +595,7 @@ void FilledLinesCheck(){
 
 
             if (isFilled == false){ //there is a gap betwene lines, add score and reset linesInRow
-                score += 40*(linesInRow * linesInRow);
+                score += pointsForFilledLine*(linesInRow * linesInRow);
                 linesInRow = 0;
             }
             else{ //clear line, move higher blocks down, and add 1 to linesInRow
@@ -620,12 +632,35 @@ void FilledLinesCheck(){
     }
 
     //add score
-    score += 40*(linesInRow * linesInRow);
+    score += pointsForFilledLine*(linesInRow * linesInRow);
 }
 //-------- game over --------//
+/*If tetromin lays in top of placed block, it is game over*/
 void GameOverCheck(){
+    for(int line = 0; line <= tetrominGridSize - 1; line++){
+        for(int col = 0; col <= tetrominGridSize - 1; col++){
+            if(tetrominPice->tetrominArea[line][col] != NULL){
+                switch (selectedGameMode)
+                {
+                case Resized:
+                    if(resizedMap[line+tetrominPice->axisY][col+tetrominPice->axisX]){
+                        isGameOver = true;
+                    }
 
+                    break;
+
+                case Classic:
+                    if(classicMap[line+tetrominPice->axisY][col+tetrominPice->axisX]){
+                        isGameOver = true;
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
 }
+
 //-------- game update --------//
 /*Originally this functions purpose was to just check if something is under the blocks of tetromin, but it was enhanced with function calls like DisplayMap for better optimalization.
   If tetromin block has a ground or a block under it, this function will place blocks of tetromin on map grid and call createion of new tetromin, also will call check of filled lines.
@@ -726,25 +761,28 @@ void GameUpdateService(){
                 }
             }
 
+            DisplayTetrominRemove();
+
             DisplayMap(); //To this point, blocks are just added to map grid, so clearing the display is unnecessary.
-            //find filled lines //Checks if lines are filled. Description can be found in the function.
 
             //create new tetromin
-            TetrominCreate();
-
-            //display new tetromin
+            TetrominCreate(); 
             DisplayTetromin();
+
+            //Checks if lines are filled. Description can be found in the function.
+            FilledLinesCheck();
 
             //score and next block bar update
             DisplayScoreAndNextBlockClear();
             DisplayScoreAndNextBlock(); //next block is genarated in TetrominCreate, this function is for this reason called after it
 
+            //check if game over
+            GameOverCheck();
+
             //DisplayTetromin is called every time in main loop begining, so there is no need to use it here
         }
         else{ //tetromin cannot be placed, so tetromin just falls
-            DisplayTetrominRemove();
             TetrominFall();
-            DisplayTetromin();
         }
 
 
@@ -1361,7 +1399,102 @@ void MovementService(){
     }
 }
 
+//-------- restart --------//
+void restart(){
+    //clear map
+    ResizedClearMap();
+    ResizedNULLMap();
+    ClassicClearMap();
+    ClassicNULLMap();
+    
+    //make new tetromin
+    TetrominDelete();
+    TetrominDeclareNext();
+    TetrominDeclareNext();
+    tetrominPice = new tetromin();
+    TetrominCreate();
 
+    //reset other game values
+    score = 0;
+    isGameOver = 0;
+    moved = false;
+}
+
+//-------- mode select --------//
+void ModeSelect(){
+    bool isSelected = false;
+
+    M5.Lcd.fillRect(17, 50, 101, 140, backgroundCollor);
+    M5.Lcd.drawRect(17, 50, 101, 140, otherColor);
+    M5.Lcd.setCursor(19, 52);
+    M5.Lcd.println("Select game Mode");
+
+    M5.Lcd.setCursor(19, 70);
+    M5.Lcd.println("Resized <");
+    M5.Lcd.setCursor(19, 79);
+    M5.Lcd.println("Classic");
+            
+
+    while(!isSelected){
+        do{ 
+            //select gamemode
+            if(M5.BtnA.read() == 1) isSelected = true;
+
+            //change game mode and wait until BtnB releas
+            if(M5.BtnB.read() == 1){
+                switch (selectedGameMode)
+                {
+                case Resized:
+                    selectedGameMode = Classic;
+
+                    M5.Lcd.fillRect(17, 50, 101, 140, backgroundCollor);
+                    M5.Lcd.drawRect(17, 50, 101, 140, otherColor);
+                    M5.Lcd.setCursor(19, 52);
+                    M5.Lcd.println("Select game Mode");
+
+                    M5.Lcd.setCursor(19, 70);
+                    M5.Lcd.println("Resized");
+                    M5.Lcd.setCursor(19, 79);
+                    M5.Lcd.println("Classic <");
+
+                    while(M5.BtnB.read() == 1){}
+
+                    break;
+                
+                case Classic:
+                    selectedGameMode = Resized;
+
+                    M5.Lcd.fillRect(17, 50, 101, 140, backgroundCollor);
+                    M5.Lcd.drawRect(17, 50, 101, 140, otherColor);
+                    M5.Lcd.setCursor(19, 52);
+                    M5.Lcd.println("Select game Mode");
+
+                    M5.Lcd.setCursor(19, 70);
+                    M5.Lcd.println("Resized <");
+                    M5.Lcd.setCursor(19, 79);
+                    M5.Lcd.println("Classic");
+
+                    while(M5.BtnB.read() == 1){}
+
+                    break;
+                }
+            }
+        }while (M5.BtnA.read() != 1 && M5.BtnB.read() != 1 );
+    }
+    M5.Lcd.fillRect(17, 50, 101, 140, backgroundCollor);
+    delay(10);
+}
+
+//-------- credits --------//
+void Credits(){
+    M5.Lcd.fillRect(17, 50, 101, 140, backgroundCollor);
+    M5.Lcd.drawRect(17, 50, 101, 140, otherColor);
+    M5.Lcd.setCursor(19, 52);
+    M5.Lcd.println("Game made by");
+    M5.Lcd.setCursor(19, 61);
+    M5.Lcd.println("Meivr");
+    delay(3000);
+}
 
 ////////// setup //////////
 /*setup is used to setup and prepare the game to work properly*/
@@ -1371,6 +1504,12 @@ void setup() {
   Serial.begin(38400);
   M5.Lcd.setTextSize(0.5);
   delay(100);
+
+  //credits
+  Credits();
+
+  //selecte game mode
+  ModeSelect();
 
   // game preparation //
   ResizedNULLMap();
@@ -1396,5 +1535,14 @@ void loop(){
         Function is described with comments, so if you want to find about how this game works, look there*/
         //-------- Debug --------//
     }
-    //game over and restart stuff
+
+    //game overf
+    DisplayGameOver();
+    //wait until BtnA is pressed
+    while(M5.BtnA.read() != 1){}
+
+    //restart
+    restart();
+    M5.Lcd.fillRect(0, 0, 135, 240, backgroundCollor); //clear display
+    delay(100);
 }
