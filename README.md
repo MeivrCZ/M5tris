@@ -5,10 +5,10 @@
 
 # Controls
 
-BtnA press -> tetromin moves left__
-BtnA hold -> tetromin turns left__
-BtnB press -> tetromin moves right__
-BtnB hold -> tetromin turns right__
+BtnA press -> tetromin moves left <br />
+BtnA hold -> tetromin turns left <br />
+BtnB press -> tetromin moves right <br />
+BtnB hold -> tetromin turns right <br />
 
 # Other
 
