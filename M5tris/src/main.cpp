@@ -12,10 +12,11 @@ const int filledColor = WHITE;
 const int otherColor = WHITE; //for things like score, lines, game over screen, etc.
 const int placedColor = GREEN;
 
-const int startSpeed = 750;
+const int startSpeed = 800;
 int score = 0;
 bool isGameOver = false;
 const int pointsForFilledLine = 10;
+bool moved = false; //if player moved tetromin, and is still holding button, do not move
 
 //-------- game mode --------//
 enum gameMode { Classic, Resized };
@@ -29,7 +30,7 @@ const int tetrominColor = BLUE;
 enum tetrominType {Brick, L, ReverseL, S, ReverseS, I, T};
 tetrominType tetrominNext; //contains value of next tetromin
 void TetrominDeclareNext(){ //declares next tetromin
-    int tetId = random(1, 7); //1 = Brick, 2 = L, 3 = ReverseL, 4 = S, 5 = ReverseS, 6 = I, 7 = T
+    int tetId = random(1, 8); //1 = Brick, 2 = L, 3 = ReverseL, 4 = S, 5 = ReverseS, 6 = I, 7 = T
     switch (tetId)
     {
     case 1:
@@ -549,11 +550,14 @@ void GameUpdateService(){
                 }
             }
 
+            DisplayTetrominRemove();
+
             DisplayMap(); //To this point, blocks are just added to map grid, so clearing the display is unnecessary.
 
             //create new tetromin
             TetrominCreate(); 
-            
+            DisplayTetromin();
+
             //Checks if lines are filled. Description can be found in the function.
             //CheckFilled();
 
@@ -798,12 +802,10 @@ void RotateLeft(){
                 if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
                     if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
                         canPlace = false;
-                        Serial.println("tetromin is on block");
                     }
                 }
                 else{
                     canPlace = false;
-                    Serial.println("tetromin is in void");
                 }
                 break;
             case Classic:
@@ -996,12 +998,10 @@ void RotateRight(){
                 if(tetrominCopy->axisX+col>=0 && tetrominCopy->axisX+col<=resizedGridWidht-1){ //check if void
                     if(resizedMap[tetrominCopy->axisY+line][tetrominCopy->axisX+col] != NULL){
                         canPlace = false;
-                        Serial.println("tetromin is on block");
                     }
                 }
                 else{
                     canPlace = false;
-                    Serial.println("tetromin is in void");
                 }
                 break;
             case Classic:
@@ -1170,9 +1170,69 @@ void RotateRight(){
     TetrominCopyDelete();
 }
 
-// service //
+// movement service //
+/*Service provides controls of tetromin (moving and rotating).
+  Player will have a time slot in witch he can controll tetromin. When time runs out, game will update.
+  Time for controlling is decresing with higher score values, so game will be harder.*/
 void MovementService(){
-    
+    //action is used for commiting the right action
+    int action = 0; //0 - dont move | 1 - move left | 2 - turn left | 3 - move right | 4 - turn right
+    //this loop sets a time slop, in witch player can control tetromin 
+    for(int speed = startSpeed - (score/100); speed > 0; speed--){
+        Serial.println(speed);
+        //reset
+        action = 0; 
+        M5.BtnA.read();
+        M5.BtnB.read();
+
+        if(M5.BtnA.isReleased() == 1 && M5.BtnB.isReleased() == 1){
+            moved = false;
+        }
+
+        //if player moved tetromin, dont move
+        if(!moved){
+            //loop witch gathers data 
+            do{
+                //read data
+                M5.BtnA.read();
+                M5.BtnB.read();
+
+                if(M5.BtnA.pressedFor(400) == 1){ //turn left
+                    action = 2;
+                    moved = true;
+                }
+                else if(M5.BtnA.isPressed() == 1){ //move left
+                    action = 1;
+                    moved = true;
+                }
+                else if(M5.BtnB.pressedFor(400) == 1){ //turn right
+                    action = 4;
+                    moved = true;
+                }
+                else if(M5.BtnB.isPressed() == 1){ //move right
+                 action = 3;
+                 moved = true;
+                }
+            }while((M5.BtnA.isPressed() == 1 && M5.BtnA.pressedFor(400) != 1) || (M5.BtnB.isPressed() == 1 && M5.BtnB.pressedFor(400) != 1));
+
+            switch (action) //0 - dont move | 1 - move left | 2 - turn left | 3 - move right | 4 - turn right
+            {
+            case 1:
+                MoveLeft();
+                break;
+            case 2:
+                RotateLeft();
+                break;
+            case 3:
+                MoveRight();
+                break;
+            case 4:
+                RotateRight();
+                break;
+            }
+            delay(1);
+        }
+    }
 }
 
 
@@ -1209,9 +1269,6 @@ void loop(){
         
         Function is described with comments, so if you want to find about how this game works, look there*/
         //-------- Debug --------//
-        delay(800);
-        MoveRight();
-        RotateRight();
     }
     //game over and restart stuff
 }
