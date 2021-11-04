@@ -382,8 +382,6 @@ void DisplayTetromin(){ //displays tetrominPice
         break;
     }
 }
-
-// tetromin removal //
 void DisplayTetrominRemove(){
     switch (selectedGameMode)
     {
@@ -406,6 +404,18 @@ void DisplayTetrominRemove(){
                 }
             }
         }
+        break;
+    }
+}
+void DisplayFilledLine(int linePos){ //display white line at position
+    switch (selectedGameMode)
+    {
+    case Resized:
+        M5.Lcd.fillRect(0, (linePos * resizedBlockSize) + 16, 135, resizedBlockSize, filledColor);
+        break;
+    
+    case Classic:
+        M5.Lcd.fillRect(36,linePos * classicBlockSize, 100, classicBlockSize, filledColor);
         break;
     }
 }
@@ -505,6 +515,117 @@ void TetrominFall(){
     tetrominPice->axisY++;
     DisplayTetromin();
 }
+
+//-------- filled lines -------//
+/*This function checks if there are some filled lines on map. If line is filled, clear that area, and move everithing from higher lines down.
+  For cleard line, player will gain 40 score. For multiple cleared lines, player will get 40*(num. of filled lines  *  num. of filled lines) score (this rule wont apply if there is a gap betwene filled lines).*/
+void FilledLinesCheck(){
+    int linesInRow = 0;
+    int isFilled = true;
+
+    switch (selectedGameMode)
+    {
+    case Resized:
+        //line check
+        for(int line = 0; line <= resizedGridHight - 1; line++){
+            isFilled = true;
+            for(int col = 0; col <= resizedGridWidht - 1; col++){
+                if (resizedMap[line][col] == NULL){
+                    isFilled = false;
+                }
+            }
+
+
+            if (isFilled == false){ //there is a gap betwene lines, add score and reset linesInRow
+                score += 40*(linesInRow * linesInRow);
+                linesInRow = 0;
+            }
+            else{ //clear line, move higher blocks down, and add 1 to linesInRow
+                DisplayFilledLine(line);
+                //clear line
+                for(int col = 0; col <= resizedGridWidht - 1; col++){
+                    delete resizedMap[line][col];
+                    resizedMap[line][col] = NULL;
+                }
+
+                //move higher lines down
+                for (int lineM = line - 1; lineM >= 0; lineM--){
+                    for(int col = 0; col <= resizedGridWidht - 1; col++){
+                        if (resizedMap[lineM][col] != NULL)
+                        {
+                            resizedMap[lineM + 1][col] = new block(resizedMap[lineM][col]->color);
+                            delete resizedMap[lineM][col];
+                            resizedMap[lineM][col] = NULL;
+                        }
+                    }
+                }
+
+                //add 1 to linesInRow
+                linesInRow++;
+                delay(100);
+
+                DisplayMapClear();
+                DisplayMap();
+                DisplayTetromin();
+            }
+        }
+
+        break;
+    case Classic:
+        //line check
+        for(int line = 0; line <= classicGridHight - 1; line++){
+            isFilled = true;
+            for(int col = 0; col <= classicGridWidht - 1; col++){
+                if (classicMap[line][col] == NULL){
+                    isFilled = false;
+                }
+            }
+
+
+            if (isFilled == false){ //there is a gap betwene lines, add score and reset linesInRow
+                score += 40*(linesInRow * linesInRow);
+                linesInRow = 0;
+            }
+            else{ //clear line, move higher blocks down, and add 1 to linesInRow
+                DisplayFilledLine(line);
+                //clear line
+                for(int col = 0; col <= classicGridWidht - 1; col++){
+                    delete classicMap[line][col];
+                    classicMap[line][col] = NULL;
+                }
+
+                //move higher lines down
+                for (int lineM = line - 1; lineM >= 0; lineM--){
+                    for(int col = 0; col <= classicGridWidht - 1; col++){
+                        if (classicMap[lineM][col] != NULL)
+                        {
+                            classicMap[lineM + 1][col] = new block(classicMap[lineM][col]->color);
+                            delete classicMap[lineM][col];
+                            classicMap[lineM][col] = NULL;
+                        }
+                    }
+                }
+
+                //add 1 to linesInRow
+                linesInRow++;
+                delay(100);
+
+                DisplayMapClear();
+                DisplayMap();
+                DisplayTetromin();
+            }
+        }
+
+        break;
+    }
+
+    //add score
+    score += 40*(linesInRow * linesInRow);
+}
+//-------- game over --------//
+void GameOverCheck(){
+
+}
 //-------- game update --------//
 /*Originally this functions purpose was to just check if something is under the blocks of tetromin, but it was enhanced with function calls like DisplayMap for better optimalization.
   If tetromin block has a ground or a block under it, this function will place blocks of tetromin on map grid and call createion of new tetromin, also will call check of filled lines.
@@ -559,14 +680,14 @@ void GameUpdateService(){
             DisplayTetromin();
 
             //Checks if lines are filled. Description can be found in the function.
-            //CheckFilled();
-
-            //check if game over
-            //CheckGameOver();
+            FilledLinesCheck();
 
             //score and next block bar update
             DisplayScoreAndNextBlockClear();
             DisplayScoreAndNextBlock(); //next block is genarated in TetrominCreate, this function is for this reason called after it
+
+            //check if game over
+            GameOverCheck();
 
             //DisplayTetromin is called every time in main loop begining, so there is no need to use it here
         }
@@ -1173,18 +1294,21 @@ void RotateRight(){
 // movement service //
 /*Service provides controls of tetromin (moving and rotating).
   Player will have a time slot in witch he can controll tetromin. When time runs out, game will update.
-  Time for controlling is decresing with higher score values, so game will be harder.*/
+  Time for controlling is decresing with higher score values, so game will be harder.
+  
+  This function uses "moved" variable, witch says if tetromin was in last cicle moved or not.
+  If moved == false, tetromin can be moved. If value is true, tetromin cannot be moved*/
 void MovementService(){
     //action is used for commiting the right action
     int action = 0; //0 - dont move | 1 - move left | 2 - turn left | 3 - move right | 4 - turn right
     //this loop sets a time slop, in witch player can control tetromin 
     for(int speed = startSpeed - (score/100); speed > 0; speed--){
-        Serial.println(speed);
         //reset
         action = 0; 
         M5.BtnA.read();
         M5.BtnB.read();
 
+        //if there are no buttons pressed, tetromin can be moved
         if(M5.BtnA.isReleased() == 1 && M5.BtnB.isReleased() == 1){
             moved = false;
         }
@@ -1197,6 +1321,7 @@ void MovementService(){
                 M5.BtnA.read();
                 M5.BtnB.read();
 
+                //if can be done, set action
                 if(M5.BtnA.pressedFor(400) == 1){ //turn left
                     action = 2;
                     moved = true;
@@ -1215,6 +1340,7 @@ void MovementService(){
                 }
             }while((M5.BtnA.isPressed() == 1 && M5.BtnA.pressedFor(400) != 1) || (M5.BtnB.isPressed() == 1 && M5.BtnB.pressedFor(400) != 1));
 
+            //execute selected function (0 as a selected num. will do nothing)
             switch (action) //0 - dont move | 1 - move left | 2 - turn left | 3 - move right | 4 - turn right
             {
             case 1:
@@ -1230,8 +1356,8 @@ void MovementService(){
                 RotateRight();
                 break;
             }
-            delay(1);
         }
+        delay(1);
     }
 }
 
